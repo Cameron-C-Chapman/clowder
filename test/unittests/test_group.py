@@ -4,8 +4,8 @@ import os
 import sys
 import unittest
 
-from clowder.model.group import Group
-from clowder.model.source import Source
+from clowder import Group
+from clowder import Source
 from unittests.shared import (
     __defaults_yaml__,
     __github_https_source_yaml__,

@@ -13,8 +13,8 @@ from termcolor import cprint
 import clowder.util.formatting as fmt
 import clowder.util.clowder_yaml as clowder_yaml
 from clowder.error.clowder_error import ClowderError
-from clowder.model.group import Group
-from clowder.model.source import Source
+from clowder import Group
+from clowder import Source
 from clowder.util.progress import Progress
 
 

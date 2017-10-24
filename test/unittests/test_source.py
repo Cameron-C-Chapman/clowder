@@ -3,7 +3,7 @@
 import sys
 import unittest
 
-from clowder.model.source import Source
+from clowder import Source
 from unittests.shared import (
     __github_https_source_yaml__,
     __github_ssh_source_yaml__

@@ -11,7 +11,7 @@ import clowder.util.formatting as fmt
 from clowder.error.clowder_error import ClowderError
 from clowder.git.project_repo import ProjectRepo
 from clowder.git.project_repo_recursive import ProjectRepoRecursive
-from clowder.model.fork import Fork
+from clowder import Fork
 from clowder.util.connectivity import is_offline
 from clowder.util.execute import execute_forall_command
 
