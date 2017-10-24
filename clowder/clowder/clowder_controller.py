@@ -2,20 +2,19 @@
 
 from __future__ import print_function
 
-import multiprocessing as mp
 import os
-import signal
 import sys
 
-import psutil
 from termcolor import cprint
 
 import clowder.util.formatting as fmt
 import clowder.util.clowder_yaml as clowder_yaml
 from clowder.error.clowder_error import ClowderError
-from clowder import Group
-from clowder import Source
-from clowder.util.progress import Progress
+from clowder import (
+    __clowder_pool__, __clowder_results__,
+    async_callback, pool_handler,
+    Group, Source
+)
 
 
 def herd_project(project, branch, tag, depth, rebase):
@@ -40,42 +39,6 @@ def sync_project(project, rebase):
     """Sync fork project with upstream"""
 
     project.sync(rebase, parallel=True)
-
-
-def async_callback(val):
-    """Increment async progress bar"""
-
-    del val
-    __clowder_progress__.update()
-
-
-__clowder_parent_id__ = os.getpid()
-
-
-def worker_init():
-    """
-    Process pool terminator
-    Adapted from https://stackoverflow.com/a/45259908
-    """
-
-    def sig_int(signal_num, frame):
-        """Signal handler"""
-
-        del signal_num, frame
-        parent = psutil.Process(__clowder_parent_id__)
-        for child in parent.children(recursive=True):
-            if child.pid != os.getpid():
-                child.terminate()
-        parent.terminate()
-        psutil.Process(os.getpid()).terminate()
-        print('\n\n')
-
-    signal.signal(signal.SIGINT, sig_int)
-
-
-__clowder_results__ = []
-__clowder_pool__ = mp.Pool(initializer=worker_init)
-__clowder_progress__ = Progress()
 
 
 class ClowderController(object):
@@ -753,35 +716,3 @@ class ClowderController(object):
             sys.exit(1)
         except (KeyboardInterrupt, SystemExit):
             sys.exit(1)
-
-
-# Disable warnings shown by pylint for catching too general exception
-# pylint: disable=W0703
-
-
-def pool_handler(count):
-    """Pool handler for finishing parallel jobs"""
-
-    print()
-    __clowder_progress__.start(count)
-
-    try:
-        for result in __clowder_results__:
-            result.get()
-            if not result.successful():
-                __clowder_progress__.close()
-                __clowder_pool__.close()
-                __clowder_pool__.terminate()
-                cprint('\n - Command failed\n', 'red')
-                sys.exit(1)
-    except Exception as err:
-        __clowder_progress__.close()
-        __clowder_pool__.close()
-        __clowder_pool__.terminate()
-        cprint('\n' + str(err) + '\n', 'red')
-        sys.exit(1)
-    else:
-        __clowder_progress__.complete()
-        __clowder_progress__.close()
-        __clowder_pool__.close()
-        __clowder_pool__.join()
