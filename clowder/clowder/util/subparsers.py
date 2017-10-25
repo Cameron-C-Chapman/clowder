@@ -159,6 +159,9 @@ def _configure_subparser_herd(subparsers, clowder):
     parser_herd.add_argument('--skip', '-s', choices=project_names, nargs='+', metavar='PROJECT', default=[],
                              help=herd_help_skip)
 
+    parser_herd.add_argument('--protocol',  choices=['https', 'ssh'], nargs=1, default=None, metavar='PROTOCOL',
+                             help='Protocol to clone new repos with')
+
     parser_herd.add_argument('--parallel', action='store_true', help='run commands in parallel')
 
     parser_herd.add_argument('--rebase', '-r', action='store_true', help='use rebase instead of pull')

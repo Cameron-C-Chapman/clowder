@@ -184,7 +184,7 @@ class Command(object):
         depth = None if self.args.depth is None else self.args.depth[0]
 
         args = {'group_names': self.args.groups, 'project_names': self.args.projects, 'skip': self.args.skip,
-                'branch': branch, 'tag': tag, 'depth': depth, 'rebase': self.args.rebase}
+                'branch': branch, 'tag': tag, 'depth': depth, 'rebase': self.args.rebase, 'protocol': self.args.protocol}
         if self.args.parallel:
             self.clowder.herd_parallel(**args)
             return

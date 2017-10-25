@@ -18,10 +18,10 @@ from clowder.model.source import Source
 from clowder.util.progress import Progress
 
 
-def herd_project(project, branch, tag, depth, rebase):
+def herd_project(project, protocol, branch, tag, depth, rebase):
     """Clone project or update latest from upstream"""
 
-    project.herd(branch=branch, tag=tag, depth=depth, rebase=rebase, parallel=True)
+    project.herd(protocol=protocol, branch=branch, tag=tag, depth=depth, rebase=rebase, parallel=True)
 
 
 def reset_project(project, timestamp):
@@ -235,7 +235,7 @@ class ClowderController(object):
             self._run_project_command(project, skip, 'herd', branch=branch, tag=tag, depth=depth, rebase=rebase)
 
     def herd_parallel(self, group_names, project_names=None, skip=None, branch=None, tag=None,
-                      depth=None, rebase=False):
+                      depth=None, rebase=False, protocol=None):
         """Pull or rebase latest upstream changes for projects in parallel"""
 
         if skip is None:
@@ -250,7 +250,7 @@ class ClowderController(object):
             for project in projects:
                 if project.name in skip:
                     continue
-                result = __clowder_pool__.apply_async(herd_project, args=(project, branch, tag, depth, rebase),
+                result = __clowder_pool__.apply_async(herd_project, args=(project, protocol, branch, tag, depth, rebase),
                                                       callback=async_callback)
                 __clowder_results__.append(result)
             pool_handler(len(projects))
@@ -262,7 +262,7 @@ class ClowderController(object):
         for project in projects:
             if project.name in skip:
                 continue
-            result = __clowder_pool__.apply_async(herd_project, args=(project, branch, tag, depth, rebase),
+            result = __clowder_pool__.apply_async(herd_project, args=(project, protocol, branch, tag, depth, rebase),
                                                   callback=async_callback)
             __clowder_results__.append(result)
         pool_handler(len(projects))

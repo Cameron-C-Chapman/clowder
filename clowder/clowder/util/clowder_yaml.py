@@ -189,6 +189,8 @@ def validate_yaml_import(yaml_file):
 def _load_yaml_import_defaults(imported_defaults, defaults):
     """Load clowder projects from imported group"""
 
+    if 'protocol' in imported_defaults:
+        defaults['protocol'] = imported_defaults['protocol']
     if 'recursive' in imported_defaults:
         defaults['recursive'] = imported_defaults['recursive']
     if 'ref' in imported_defaults:
@@ -239,7 +241,6 @@ def _load_yaml_import_projects(imported_projects, projects):
     for imported_project in imported_projects:
         if imported_project['name'] not in project_names:
             if 'path' not in imported_project:
-                # error = fmt.invalid_entries_error('defaults', defaults, yaml_file)
                 error = colored(' - Missing path in new project', 'red')
                 print(fmt.invalid_yaml_error())
                 print(fmt.error(error))
@@ -359,6 +360,10 @@ def _validate_yaml_import_defaults(defaults, yaml_file):
             raise ClowderError(error)
         del defaults['ref']
 
+    if 'protocol' in defaults:
+        _validate_type_str(defaults['protocol'], 'protocol', yaml_file)
+        del defaults['protocol']
+
     if 'remote' in defaults:
         _validate_type_str(defaults['remote'], 'remote', yaml_file)
         del defaults['remote']
@@ -396,6 +401,12 @@ def _validate_yaml_defaults(defaults, yaml_file):
         error = fmt.invalid_ref_error(defaults['ref'], yaml_file)
         raise ClowderError(error)
     del defaults['ref']
+
+    if 'protocol' not in defaults:
+        error = fmt.missing_entry_error('protocol', 'defaults', yaml_file)
+        raise ClowderError(error)
+    _validate_type_str(defaults['protocol'], 'protocol', yaml_file)
+    del defaults['protocol']
 
     if 'remote' not in defaults:
         error = fmt.missing_entry_error('remote', 'defaults', yaml_file)

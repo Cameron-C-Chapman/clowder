@@ -23,6 +23,7 @@ class Project(object):
         self.name = project['name']
         self.path = project['path']
 
+        self._protocol = defaults['protocol']
         self._root_directory = root_directory
         self._ref = project.get('ref', group.get('ref', defaults['ref']))
         self._remote = project.get('remote', group.get('remote', defaults['remote']))
@@ -37,8 +38,6 @@ class Project(object):
         for source in sources:
             if source.name == source_name:
                 self._source = source
-
-        self._url = self._source.get_url_prefix() + self.name + ".git"
 
         self.fork = None
         if 'fork' in project:
@@ -173,7 +172,7 @@ class Project(object):
 
         return project
 
-    def herd(self, branch=None, tag=None, depth=None, rebase=False, parallel=False):
+    def herd(self, protocol=None, branch=None, tag=None, depth=None, rebase=False, parallel=False):
         """Clone project or update latest from upstream"""
 
         self._print_output = not parallel
@@ -183,14 +182,14 @@ class Project(object):
                           parallel=parallel, print_output=self._print_output)
 
         if branch:
-            self._herd_branch(repo, branch, herd_depth, rebase)
+            self._herd_branch(repo, protocol, branch, herd_depth, rebase)
             return
 
         if tag:
-            self._herd_tag(repo, tag, herd_depth, rebase)
+            self._herd_tag(repo, protocol, tag, herd_depth, rebase)
             return
 
-        self._herd_ref(repo, herd_depth, rebase)
+        self._herd_ref(repo, protocol, herd_depth, rebase)
 
     def is_dirty(self):
         """Check if project is dirty"""
@@ -320,7 +319,7 @@ class Project(object):
             raise ClowderError(message)
         sys.exit(return_code)
 
-    def _herd_branch(self, repo, branch, depth, rebase):
+    def _herd_branch(self, repo, protocol, branch, depth, rebase):
         """Clone project or update latest from upstream"""
 
         if self.fork is None:
@@ -328,15 +327,15 @@ class Project(object):
             return
 
         self._print(self.fork.status())
-        repo.configure_remotes(self._remote, self._url, self.fork.remote_name, self.fork.url)
+        repo.configure_remotes(self._remote, self._url(protocol), self.fork.remote_name, self.fork.url)
 
         self._print(fmt.fork_string(self.name))
         repo.herd_branch(self._url, branch, rebase=rebase, fork_remote=self.fork.remote_name)
 
         self._print(fmt.fork_string(self.fork.name))
-        repo.herd_remote(self.fork.url, self.fork.remote_name, branch=branch)
+        repo.herd_remote(self.fork.url(protocol), self.fork.remote_name, branch=branch)
 
-    def _herd_ref(self, repo, depth, rebase):
+    def _herd_ref(self, repo, protocol, depth, rebase):
         """Clone project or update latest from upstream"""
 
         if self.fork is None:
@@ -344,15 +343,15 @@ class Project(object):
             return
 
         self._print(self.fork.status())
-        repo.configure_remotes(self._remote, self._url, self.fork.remote_name, self.fork.url)
+        repo.configure_remotes(self._remote, self._url(protocol), self.fork.remote_name, self.fork.url)
 
         self._print(fmt.fork_string(self.name))
-        repo.herd(self._url, rebase=rebase)
+        repo.herd(self._url(protocol), rebase=rebase)
 
         self._print(fmt.fork_string(self.fork.name))
-        repo.herd_remote(self.fork.url, self.fork.remote_name)
+        repo.herd_remote(self.fork.url(protocol), self.fork.remote_name)
 
-    def _herd_tag(self, repo, tag, depth, rebase):
+    def _herd_tag(self, repo, protocol, tag, depth, rebase):
         """Clone project or update latest from upstream"""
 
         if self.fork is None:
@@ -360,19 +359,25 @@ class Project(object):
             return
 
         self._print(self.fork.status())
-        repo.configure_remotes(self._remote, self._url, self.fork.remote_name, self.fork.url)
+        repo.configure_remotes(self._remote, self._url(protocol), self.fork.remote_name, self.fork.url)
 
         self._print(fmt.fork_string(self.name))
-        repo.herd_tag(self._url, tag, rebase=rebase)
+        repo.herd_tag(self._url(protocol), tag, rebase=rebase)
 
         self._print(fmt.fork_string(self.fork.name))
-        repo.herd_remote(self.fork.url, self.fork.remote_name)
+        repo.herd_remote(self.fork.url(protocol), self.fork.remote_name)
 
     def _print(self, val):
         """Print output if self._print_output is True"""
 
         if self._print_output:
             print(val)
+
+    def _protocol_url(self, protocol):
+        """Return project url"""
+        if protocol == 'ssh':
+            return 'git@' + self._source.name + ':' + self.name + ".git"
+        return 'https://' + self._source.name + '/' + self.name + ".git"
 
     def _prune_local(self, branch, force):
         """Prune local branch"""
@@ -432,3 +437,9 @@ class Project(object):
 
         self._print(self.fork.status())
         repo.sync(self.fork.remote_name, rebase=rebase)
+
+    def _url(self, protocol=None):
+        """Return project url"""
+        if protocol:
+            return self._protocol_url(protocol)
+        return self._protocol_url(self._protocol)
