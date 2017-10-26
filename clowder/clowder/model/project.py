@@ -68,6 +68,16 @@ class Project(object):
 
         repo.print_branches(local=local, remote=remote)
 
+    def checkout(self, branch):
+        """Checkout branch"""
+
+        if not os.path.isdir(self.full_path()):
+            print(colored(" - Project is missing\n", 'red'))
+            return
+
+        repo = self._repo(self.full_path(), self._remote, self._ref, self._recursive)
+        repo.checkout(branch, allow_failure=True)
+
     def clean(self, args='', recursive=False):
         """Discard changes for project"""
 

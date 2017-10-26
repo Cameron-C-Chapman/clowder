@@ -44,7 +44,7 @@ class GitRepo(object):
         else:
             self.status_verbose()
 
-    def checkout(self, truncated_ref):
+    def checkout(self, truncated_ref, allow_failure=False):
         """Checkout git ref"""
 
         ref_output = fmt.ref_string(truncated_ref)
@@ -55,8 +55,10 @@ class GitRepo(object):
                 return
             self.repo.git.checkout(truncated_ref)
         except GitError as err:
-            message = colored(' - Failed to checkout ref ', 'red')
+            message = colored(' - Failed to checkout ', 'red')
             self._print(message + ref_output)
+            if allow_failure:
+                return
             self._print(fmt.error(err))
             self._exit(fmt.parallel_exception_error(self.repo_path, message, ref_output))
         except (KeyboardInterrupt, SystemExit):

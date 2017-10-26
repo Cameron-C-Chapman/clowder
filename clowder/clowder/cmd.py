@@ -108,6 +108,18 @@ class Command(object):
         self.clowder.branch(group_names=self.args.groups, project_names=self.args.projects,
                             skip=self.args.skip, local=True)
 
+    def checkout(self):
+        """clowder checkout command"""
+
+        if self.clowder_repo is None:
+            exit_clowder_not_found()
+
+        if self.clowder is None:
+            sys.exit(1)
+
+        self.clowder_repo.print_status()
+        self.clowder.checkout(self.args.branch, group_names=self.args.groups, project_names=self.args.projects)
+
     def clean(self):
         """clowder clean command"""
 
